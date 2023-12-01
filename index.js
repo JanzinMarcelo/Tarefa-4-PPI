@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const porta = 3000;
@@ -62,6 +63,9 @@ function processaCadastroUsuario(requisicao, resposta){
 app.use(express.static(path.join(process.cwd(), 'paginas')));
 
 app.get('/',(requisicao,resposta)=>{
+    const dataUltimoAcesso = requisicao.cookies.get("DataUltimoAcesso"); 
+    const data = new Date();
+    resposta.cookie("DataUltimoAcesso", data.toLocaleString() + " " + data.toLocaleTimeString());
     resposta.end(`
     <!DOCTYPE html>
     <head>
@@ -74,6 +78,9 @@ app.get('/',(requisicao,resposta)=>{
             <li><a href="/cadastraUsuario.html">Cadastrar Usuário</a></li>
          </ul>
     </body>
+    <footer>
+    <p>Seu ultimo acesso foi em: ${dataUltimoAcesso}</p>
+    </footer>
      </html>
      `);
 
