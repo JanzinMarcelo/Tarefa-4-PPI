@@ -1,9 +1,27 @@
 import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
 
+function autenticar(requisicao, resposta, next){
+    if(requisicao.session.usuarioAutenticado){
+        next();
+    }else{
+        resposta.redirect('/login.html');
+    }
+}
 const app = express();
 app.use(cookieParser());
+app.use(session({
+ secret: "M1nH4Ch4v3S3cR3t4",
+ resave: false,
+ saveUninitialized: true,
+ cookie:{
+    maxAge: 1000 * 60 * 15 //15 min
+ }
+
+
+}))
 
 const porta = 3000;
 const host ='0.0.0.0';
@@ -64,11 +82,11 @@ function processaCadastroUsuario(requisicao, resposta){
 
 app.use(express.static(path.join(process.cwd(), 'paginas')));
 
-app.get('/',(requisicao,resposta)=>{
+app.get('/',autenticar,(requisicao,resposta)=>{
     const dataUltimoAcesso = requisicao.cookies.DataUltimoAcesso; 
     const data = new Date();
     resposta.cookie("DataUltimoAcesso", data.toLocaleString(), {
-    maxAge: 1000 * 60 * 60 * 24 * 30;
+    maxAge: 1000 * 60 * 60 * 24 * 30,
     httpOnly: true
     });
     resposta.end(`
@@ -91,7 +109,29 @@ app.get('/',(requisicao,resposta)=>{
 
 })
 
-app.post('/cadastrarUsuario',processaCadastroUsuario);
+app.post('/login',(requisicao,resposta)=>{
+    const Usu = requisicao.body.Usu;
+    const Senha = requisicao.body.Senha;
+    if(Usu && Senha && (Usu ==='Joao') && (Senha === '1234')) {
+        requisicao.session.usuarioAutenticado = true;
+        resposta.redirect('/');
+    }
+    else(
+        resposta.end(`
+            <!DOCTYPE html>
+            <head>
+            <meta charset="UTF-8">
+            <title>Falha na autenticação</title>
+            </head>
+            <body>
+            <h2>Usuario ou Senha invalidos!</h2>
+            <a href="/login.html">Voltar ao Login</a>
+            </body>
+            </html>
+        `)
+    )
+});
+app.post( '/cadastrarUsuario',autenticar,processaCadastroUsuario);
     
 
 
