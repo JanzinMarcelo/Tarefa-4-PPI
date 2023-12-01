@@ -3,6 +3,8 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 
 const app = express();
+app.use(cookieParser());
+
 const porta = 3000;
 const host ='0.0.0.0';
 var listaUsuarios = [];
@@ -63,9 +65,12 @@ function processaCadastroUsuario(requisicao, resposta){
 app.use(express.static(path.join(process.cwd(), 'paginas')));
 
 app.get('/',(requisicao,resposta)=>{
-    const dataUltimoAcesso = requisicao.cookies.get("DataUltimoAcesso"); 
+    const dataUltimoAcesso = requisicao.cookies.DataUltimoAcesso; 
     const data = new Date();
-    resposta.cookie("DataUltimoAcesso", data.toLocaleString() + " " + data.toLocaleTimeString());
+    resposta.cookie("DataUltimoAcesso", data.toLocaleString(), {
+    maxAge: 1000 * 60 * 60 * 24 * 30;
+    httpOnly: true
+    });
     resposta.end(`
     <!DOCTYPE html>
     <head>
